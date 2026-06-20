@@ -44,6 +44,11 @@ app.get('/health', (req, res) => {
   res.status(200).json({ success: true, status: 'Study Buddy backend is operational!' });
 });
 
+// Base route for root access
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'Welcome to the Study Buddy API backend. It is operational!' });
+});
+
 // Fallback Route Handler (404 Not Found)
 app.use((req, res, next) => {
   res.status(404).json({ success: false, error: `Route not found: ${req.originalUrl}` });
