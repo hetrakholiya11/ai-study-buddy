@@ -40,6 +40,7 @@ const QuizGenerator = () => {
   // Sidebar states
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [quizHistory, setQuizHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [summaries, setSummaries] = useState([]);
   const [activeQuizId, setActiveQuizId] = useState(null);
 
@@ -64,6 +65,7 @@ const QuizGenerator = () => {
 
   // Load history lists
   const loadQuizHistory = async () => {
+    setHistoryLoading(true);
     try {
       const res = await aiService.getUserQuizzes();
       if (res && res.success) {
@@ -71,6 +73,8 @@ const QuizGenerator = () => {
       }
     } catch (err) {
       console.error('Quiz history loading error:', err);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -176,6 +180,7 @@ const QuizGenerator = () => {
     setCurrentIdx(0);
     setScore(0);
     setActiveQuizId(null);
+    if (window.innerWidth <= 768) setSidebarOpen(false);
 
     try {
       const params = {
@@ -277,6 +282,7 @@ const QuizGenerator = () => {
     setSubject('');
     setSelectedSummaryId('');
     setSelectedFiles([]);
+    if (window.innerWidth <= 768) setSidebarOpen(false);
   };
 
   // Load selected past quiz session
@@ -315,22 +321,99 @@ const QuizGenerator = () => {
     }
   };
 
+  const renderHistoryList = () => {
+    if (historyLoading) {
+      return (
+        <div className="h-20 flex items-center justify-center">
+          <Loader size="sm" />
+        </div>
+      );
+    }
+
+    if (quizHistory.length === 0) {
+      return (
+        <div className="text-center py-8 px-4 text-xs text-slate-450 dark:text-slate-500 border border-dashed border-slate-200 dark:border-dark-800 rounded-xl bg-slate-50/50 dark:bg-dark-950/20">
+          <Brain className="h-7 w-7 mx-auto opacity-20 text-brand-500 mb-1" />
+          <p>No quiz attempts found</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">Generate one to test memory</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {quizHistory.map((quiz) => {
+          const isActive = activeQuizId === quiz._id;
+          return (
+            <div
+              key={quiz._id}
+              onClick={() => {
+                handleLoadQuiz(quiz);
+              }}
+              className={`group relative p-3 rounded-xl border text-left cursor-pointer transition select-none ${
+                isActive
+                  ? 'border-brand-550/70 bg-brand-500/5 dark:bg-brand-500/10 shadow-sm'
+                  : 'border-slate-200 dark:border-dark-800/80 bg-white dark:bg-dark-900/60 hover:border-slate-300 dark:hover:border-dark-700/85 hover:bg-slate-50 dark:hover:bg-dark-850/60'
+              }`}
+            >
+              <div className="pr-6">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{quiz.title}</p>
+                
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    quiz.difficulty === 'Easy' 
+                      ? 'bg-emerald-100 text-emerald-750 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                      : quiz.difficulty === 'Hard'
+                        ? 'bg-rose-100 text-rose-750 dark:bg-rose-955/20 dark:text-rose-455'
+                        : 'bg-amber-100 text-amber-750 dark:bg-amber-955/20 dark:text-amber-400'
+                  }`}>
+                    {quiz.difficulty}
+                  </span>
+
+                  {quiz.completed ? (
+                    <span className="text-[10px] font-semibold text-slate-550 dark:text-slate-400">
+                      Score: <span className="font-bold text-brand-600 dark:text-brand-400">{quiz.score}/{quiz.questions?.length || 5}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-medium text-slate-455 italic flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-amber-500 animate-pulse" />
+                      <span>In progress</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={(e) => handleDeleteQuiz(quiz._id, e)}
+                aria-label="Delete quiz attempt"
+                className="absolute right-2 top-2 p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition"
+                title="Delete Attempt"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex h-[calc(100vh-100px)] -m-6 overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 shadow-sm relative">
+    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-100px)] -m-4 md:-m-6 md:overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 shadow-sm relative">
       
       {/* Mobile Sidebar Backdrop overlay */}
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+          className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-40 bg-slate-900/40 backdrop-blur-sm"
         />
       )}
 
       {/* 1. History Sidebar (Collapsible) */}
       <div
-        className={`h-full border-r border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-950 flex flex-col flex-shrink-0 transition-all duration-300 ${
-          sidebarOpen ? 'w-[290px]' : 'w-0'
-        } overflow-hidden fixed md:relative z-50 max-md:w-[290px] max-md:shadow-xl max-md:left-0 top-0 bottom-0`}
+        className={`h-full border-r border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-950 flex flex-col flex-shrink-0 transition-transform duration-300 fixed md:relative z-50 w-[290px] top-14 md:top-0 bottom-0 left-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 overflow-hidden'
+        }`}
       >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-dark-900">
@@ -340,6 +423,7 @@ const QuizGenerator = () => {
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
+            aria-label="Collapse quiz history sidebar"
             className="p-1 rounded hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition"
             title="Collapse Sidebar"
           >
@@ -359,76 +443,17 @@ const QuizGenerator = () => {
         </div>
 
         {/* History Attempts List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {quizHistory.length === 0 ? (
-            <div className="text-center py-8 px-4 text-xs text-slate-400">
-              <Brain className="h-7 w-7 mx-auto opacity-20 text-brand-500 mb-1" />
-              <p>No quiz attempts found</p>
-              <p className="text-[10px] text-slate-455 mt-0.5">Generate one to test memory</p>
-            </div>
-          ) : (
-            quizHistory.map((quiz) => {
-              const isActive = activeQuizId === quiz._id;
-              return (
-                <div
-                  key={quiz._id}
-                  onClick={() => {
-                    handleLoadQuiz(quiz);
-                    if (window.innerWidth <= 768) setSidebarOpen(false);
-                  }}
-                  className={`group relative p-3 rounded-xl border text-left cursor-pointer transition select-none ${
-                    isActive
-                      ? 'border-brand-550/70 bg-brand-500/5 dark:bg-brand-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-dark-800/80 bg-white/70 dark:bg-dark-900/60 hover:border-slate-300 dark:hover:border-dark-700/80 hover:bg-slate-50 dark:hover:bg-dark-850/60'
-                  }`}
-                >
-                  <div className="pr-6">
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{quiz.title}</p>
-                    
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                        quiz.difficulty === 'Easy' 
-                          ? 'bg-emerald-100 text-emerald-750 dark:bg-emerald-950/40 dark:text-emerald-400' 
-                          : quiz.difficulty === 'Hard'
-                            ? 'bg-rose-100 text-rose-750 dark:bg-rose-955/20 dark:text-rose-455'
-                            : 'bg-amber-100 text-amber-750 dark:bg-amber-955/20 dark:text-amber-400'
-                      }`}>
-                        {quiz.difficulty}
-                      </span>
-
-                      {quiz.completed ? (
-                        <span className="text-[10px] font-semibold text-slate-550 dark:text-slate-400">
-                          Score: <span className="font-bold text-brand-600 dark:text-brand-400">{quiz.score}/{quiz.questions?.length || 5}</span>
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-medium text-slate-455 italic flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-amber-500 animate-pulse" />
-                          <span>In progress</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={(e) => handleDeleteQuiz(quiz._id, e)}
-                    className="absolute right-2 top-2 p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition"
-                    title="Delete Attempt"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })
-          )}
+        <div className="flex-1 overflow-y-auto p-3">
+          {renderHistoryList()}
         </div>
-
       </div>
 
       {/* Toggle button to open sidebar when collapsed */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-4 top-4 z-10 p-2 rounded-xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 shadow-md transition"
+          aria-label="Open quiz history sidebar"
+          className="absolute left-4 top-4 z-30 p-2 rounded-xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 shadow-md transition"
           title="Open History"
         >
           <PanelLeftOpen className="h-5 w-5" />
@@ -436,7 +461,7 @@ const QuizGenerator = () => {
       )}
 
       {/* 2. Main content area */}
-      <div className="flex-1 h-full overflow-y-auto p-6 md:p-10">
+      <div className="flex-1 h-full overflow-y-auto p-6 md:p-10 relative z-10">
         <div className="w-full max-w-2xl mx-auto space-y-6">
 
           <AnimatePresence mode="wait">
@@ -513,11 +538,12 @@ const QuizGenerator = () => {
                   {/* Dynamic inputs based on Source Type */}
                   {sourceType === 'topic' && (
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <label htmlFor="quiz-subject" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Topic / Subject Matter
                       </label>
                       <input
                         type="text"
+                        id="quiz-subject"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder="e.g. World War II, React Hooks, Cellular Respiration"
@@ -529,7 +555,7 @@ const QuizGenerator = () => {
 
                   {sourceType === 'notes' && (
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <label htmlFor="summary-select" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Select Saved Notes Document
                       </label>
                       {summaries.length === 0 ? (
@@ -538,6 +564,7 @@ const QuizGenerator = () => {
                         </div>
                       ) : (
                         <select
+                          id="summary-select"
                           value={selectedSummaryId}
                           onChange={(e) => setSelectedSummaryId(e.target.value)}
                           className="custom-input cursor-pointer"
@@ -632,10 +659,11 @@ const QuizGenerator = () => {
                   {/* Grid configs */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <label htmlFor="num-questions" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Number of Questions
                       </label>
                       <select
+                        id="num-questions"
                         value={numQuestions}
                         onChange={(e) => setNumQuestions(Number(e.target.value))}
                         className="custom-input cursor-pointer"
@@ -647,10 +675,11 @@ const QuizGenerator = () => {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <label htmlFor="difficulty-level" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Difficulty Level
                       </label>
                       <select
+                        id="difficulty-level"
                         value={difficulty}
                         onChange={(e) => setDifficulty(e.target.value)}
                         className="custom-input cursor-pointer"
@@ -675,6 +704,7 @@ const QuizGenerator = () => {
                     <span>Generate Quiz</span>
                   </button>
                 </form>
+
               </motion.div>
             ) : quizSubmitted ? (
               

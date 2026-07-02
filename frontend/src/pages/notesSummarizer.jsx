@@ -352,6 +352,7 @@ const NotesSummarizer = () => {
     setActiveTab('summary');
     setRevealedAnswers({});
     handleClear();
+    if (window.innerWidth <= 768) setSidebarOpen(false);
   };
 
   // Generate scenario questions for this summary
@@ -371,97 +372,101 @@ const NotesSummarizer = () => {
     }
   };
 
+  const renderNotesHistory = () => {
+    if (historyLoading && summaries.length === 0) {
+      return (
+        <div className="h-20 flex items-center justify-center">
+          <Loader size="sm" />
+        </div>
+      );
+    }
+
+    if (summaries.length === 0) {
+      return (
+        <div className="text-center text-xs text-slate-450 py-8 border border-dashed border-slate-200 dark:border-dark-800 rounded-xl bg-slate-50/50 dark:bg-dark-950/20">
+          <FileText className="h-7 w-7 mx-auto opacity-20 text-brand-500 mb-1" />
+          <p>No saved note summaries</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1">
+        {summaries.map((summary) => {
+          const isActive = activeSummaryId === summary._id;
+          return (
+            <div
+              key={summary._id}
+              onClick={() => {
+                handleLoadSummary(summary._id);
+              }}
+              className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
+                isActive
+                  ? 'bg-brand-500/10 border-brand-500/20 text-brand-650 dark:text-brand-400 font-medium'
+                  : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-450 dark:hover:bg-dark-800/60 dark:hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-2 overflow-hidden flex-1">
+                <FileText className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span className="truncate text-xs">{summary.title}</span>
+              </div>
+              
+              <button
+                onClick={(e) => handleDeleteSummary(e, summary._id)}
+                aria-label="Delete note summary"
+                className="p-1 rounded text-slate-450 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 opacity-0 group-hover:opacity-100 transition-opacity ml-1.5"
+                title="Delete Summary"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300">
+    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-100px)] w-full md:overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300">
       
       {/* Mobile Sidebar Backdrop overlay */}
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+          className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-40 bg-slate-900/40 backdrop-blur-sm"
         />
       )}
 
       {/* 1. Summaries Sidebar History */}
-      <AnimatePresence initial={false}>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 260, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden animate-in fixed md:relative z-50 max-md:w-[260px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
+      <div
+        className={`h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden transition-transform duration-300 fixed md:relative z-50 w-[260px] top-14 md:top-0 bottom-0 left-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0'
+        }`}
+      >
+        <div className="p-4 border-b border-slate-200 dark:border-dark-850">
+          <button
+            onClick={handleNewSummary}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition shadow-md shadow-brand-500/10 focus:outline-none"
           >
-            <div className="p-4 border-b border-slate-200 dark:border-dark-850">
-              <button
-                onClick={handleNewSummary}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition shadow-md shadow-brand-500/10 focus:outline-none"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Summary</span>
-              </button>
-            </div>
+            <Plus className="h-4 w-4" />
+            <span>New Summary</span>
+          </button>
+        </div>
 
-            {/* List scroll wrapper */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-              <h4 className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider px-2 mb-2">
-                Saved Summaries
-              </h4>
-
-              {historyLoading && summaries.length === 0 ? (
-                <div className="h-40 flex items-center justify-center">
-                  <Loader size="sm" />
-                </div>
-              ) : summaries.length === 0 ? (
-                <div className="text-center text-xs text-slate-400 py-10">
-                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-30 text-slate-500" />
-                  <p>No saved summaries</p>
-                </div>
-              ) : (
-                summaries.map((summary) => {
-                  const isActive = activeSummaryId === summary._id;
-                  return (
-                    <div
-                      key={summary._id}
-                      onClick={() => {
-                        loadSummaryDetails(summary._id);
-                        if (window.innerWidth <= 768) setSidebarOpen(false);
-                      }}
-                      className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
-                        isActive
-                          ? 'bg-brand-500/10 border-brand-500/20 text-brand-650 dark:text-brand-400 font-medium'
-                          : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-450 dark:hover:bg-dark-800/60 dark:hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden flex-1">
-                        <FileText className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500'}`} />
-                        <span className="truncate text-xs">{summary.title}</span>
-                      </div>
-                      
-                      <button
-                        onClick={(e) => handleDeleteSummary(e, summary._id)}
-                        className="p-1 rounded text-slate-450 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 opacity-0 group-hover:opacity-100 transition-opacity ml-1.5"
-                        title="Delete Summary"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <div className="flex-1 overflow-y-auto p-3">
+          {renderNotesHistory()}
+        </div>
+      </div>
 
       {/* 2. Main Summary & Chat Workspace */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-dark-900">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-dark-900 relative z-10">
         
         {/* Header bar */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-dark-850 z-10 bg-white/80 dark:bg-dark-900/80 backdrop-blur-sm">
           <div className="flex items-center gap-3.5 overflow-hidden">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Hide history sidebar' : 'Show history sidebar'}
               title={sidebarOpen ? 'Hide history' : 'Show history'}
               className="p-2 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-dark-900 dark:border-dark-800 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-400 focus:outline-none transition-colors"
             >
@@ -473,6 +478,7 @@ const NotesSummarizer = () => {
                 {activeSummary && (
                   <button 
                     onClick={handleNewSummary}
+                    aria-label="Upload another notes document"
                     className="p-1 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-lg text-slate-500"
                     title="Upload another note"
                   >
@@ -500,6 +506,7 @@ const NotesSummarizer = () => {
               </button>
               <button
                 onClick={(e) => handleDeleteSummary(e, activeSummaryId)}
+                aria-label="Delete current notes summary"
                 title="Delete current summary"
                 className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-200 dark:bg-dark-900 dark:border-dark-800 dark:hover:bg-rose-950/20 dark:hover:border-rose-900/30 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition focus:outline-none"
               >

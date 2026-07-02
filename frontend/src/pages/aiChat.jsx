@@ -16,7 +16,8 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
-  FileText
+  FileText,
+  ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -118,6 +119,7 @@ const AIChat = () => {
     setActiveChatId(null);
     setInput('');
     setSearchParams({});
+    if (window.innerWidth <= 768) setSidebarOpen(false);
   };
 
   // Send message
@@ -297,158 +299,175 @@ const AIChat = () => {
     }
   ];
 
+  const renderChatHistory = () => {
+    if (chatsLoading && chats.length === 0) {
+      return (
+        <div className="h-20 flex items-center justify-center">
+          <Loader size="sm" />
+        </div>
+      );
+    }
+
+    if (chats.length === 0) {
+      return (
+        <div className="text-center text-xs text-slate-450 py-8 border border-dashed border-slate-200 dark:border-dark-800 rounded-xl bg-slate-50/50 dark:bg-dark-950/20">
+          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-20 text-brand-500" />
+          <p>No recent study chats</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {Object.keys(groupedChats).map((groupName) => {
+          const groupChats = groupedChats[groupName];
+          if (groupChats.length === 0) return null;
+
+          return (
+            <div key={groupName} className="space-y-1.5 text-left">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+                {groupName}
+              </span>
+              <div className="space-y-1">
+                {groupChats.map((chat) => {
+                  const isActive = activeChatId === chat._id;
+                  const isEditing = editingChatId === chat._id;
+
+                  return (
+                    <div
+                      key={chat._id}
+                      onClick={() => handleSelectChat(chat._id)}
+                      className={`group relative flex items-center justify-between px-3 py-2 rounded-xl text-sm cursor-pointer transition-all border ${
+                        isActive
+                          ? 'bg-brand-500/10 border-brand-500/25 text-brand-650 dark:text-brand-400 font-semibold'
+                          : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-450 dark:hover:bg-dark-800/60 dark:hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1 pr-10">
+                        <MessageSquare className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500'}`} />
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveRenameChat(chat._id);
+                              if (e.key === 'Escape') setEditingChatId(null);
+                            }}
+                            className="w-full text-xs bg-slate-50 dark:bg-dark-950 border border-slate-350 dark:border-dark-800 px-2 py-0.5 rounded focus:outline-none"
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="truncate flex flex-col min-w-0">
+                            <span className="truncate text-xs text-slate-800 dark:text-slate-200">{chat.title}</span>
+                            {chat.notesName && (
+                              <span className="text-[9px] text-brand-500 dark:text-brand-400/80 truncate">
+                                Context: {chat.notesName}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-0.5">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                saveRenameChat(chat._id);
+                              }}
+                              aria-label="Confirm rename"
+                              className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingChatId(null);
+                              }}
+                              className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={(e) => startRenameChat(e, chat)}
+                              aria-label="Rename Chat title"
+                              title="Rename Chat"
+                              className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-dark-750 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteChat(e, chat._id)}
+                              aria-label="Delete Chat session"
+                              title="Delete Chat"
+                              className="p-1 rounded text-slate-500 hover:bg-rose-100 dark:hover:bg-rose-950/30 hover:text-rose-650 dark:hover:text-rose-455 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300 relative">
+    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-100px)] w-full md:overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300 relative">
       
       {/* Mobile Sidebar Backdrop overlay */}
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+          className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-40 bg-slate-900/40 backdrop-blur-sm"
         />
       )}
 
       {/* 1. Chats Sidebar */}
-      <AnimatePresence initial={false}>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden fixed md:relative z-50 max-md:w-[280px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
+      <div
+        className={`h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden transition-transform duration-300 fixed md:relative z-50 w-[280px] top-14 md:top-0 bottom-0 left-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0'
+        }`}
+      >
+        {/* Sidebar Actions */}
+        <div className="p-4 border-b border-slate-200 dark:border-dark-850">
+          <button
+            onClick={handleNewChat}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition shadow-md shadow-brand-500/10 focus:outline-none"
           >
-            {/* Sidebar Actions */}
-            <div className="p-4 border-b border-slate-200 dark:border-dark-850">
-              <button
-                onClick={handleNewChat}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition shadow-md shadow-brand-500/10 focus:outline-none"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Chat</span>
-              </button>
-            </div>
+            <Plus className="h-4 w-4" />
+            <span>New Chat</span>
+          </button>
+        </div>
 
-            {/* Chats List Scroll Panel */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-4">
-              {chatsLoading && chats.length === 0 ? (
-                <div className="h-40 flex items-center justify-center">
-                  <Loader size="sm" />
-                </div>
-              ) : chats.length === 0 ? (
-                <div className="text-center text-xs text-slate-400 py-10">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-30 text-slate-500" />
-                  <p>No recent study chats</p>
-                </div>
-              ) : (
-                Object.keys(groupedChats).map((groupName) => {
-                  const groupItems = groupedChats[groupName];
-                  if (groupItems.length === 0) return null;
-
-                  return (
-                    <div key={groupName} className="space-y-1.5">
-                      <h4 className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider px-2">
-                        {groupName}
-                      </h4>
-                      
-                      <div className="space-y-1">
-                        {groupItems.map((chat) => {
-                          const isActive = activeChatId === chat._id;
-                          const isEditing = editingChatId === chat._id;
-
-                          return (
-                            <div
-                              key={chat._id}
-                              onClick={() => {
-                                if (!isEditing) {
-                                  loadChatDetails(chat._id);
-                                  if (window.innerWidth <= 768) setSidebarOpen(false);
-                                }
-                              }}
-                              className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
-                                isActive
-                                  ? 'bg-brand-500/10 border-brand-500/20 text-brand-650 dark:text-brand-400 font-medium'
-                                  : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-450 dark:hover:bg-dark-800/60 dark:hover:text-white'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 overflow-hidden flex-1">
-                                <MessageSquare className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500'}`} />
-                                
-                                {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editingTitle}
-                                    onChange={(e) => setEditingTitle(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && saveRenameChat(e, chat._id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="bg-white dark:bg-dark-900 border border-brand-500 rounded px-1.5 py-0.5 w-full text-xs focus:outline-none"
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <span className="truncate text-xs">{chat.title}</span>
-                                )}
-                              </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1.5">
-                                {isEditing ? (
-                                  <>
-                                    <button
-                                      onClick={(e) => saveRenameChat(e, chat._id)}
-                                      className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                                    >
-                                      <Check className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setEditingChatId(null);
-                                      }}
-                                      className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={(e) => startRenameChat(e, chat)}
-                                      title="Rename Chat"
-                                      className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-dark-750"
-                                    >
-                                      <Edit2 className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => handleDeleteChat(e, chat._id)}
-                                      title="Delete Chat"
-                                      className="p-1 rounded text-slate-500 hover:bg-rose-100 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-455"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* Chats List Scroll Panel */}
+        <div className="flex-1 overflow-y-auto p-3">
+          {renderChatHistory()}
+        </div>
+      </div>
 
       {/* 2. Main Chat Panel */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-dark-900 relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-dark-900 relative z-10">
         
         {/* Chat Panel Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-dark-850 z-10 bg-white/80 dark:bg-dark-900/80 backdrop-blur-sm">
           <div className="flex items-center gap-3.5 overflow-hidden">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Hide chat history sidebar' : 'Show chat history sidebar'}
               title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
               className="p-2 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-dark-900 dark:border-dark-800 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-400 focus:outline-none transition-colors"
             >
@@ -456,19 +475,21 @@ const AIChat = () => {
             </button>
 
             <div className="overflow-hidden leading-snug">
-              <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
-                <span>{activeChat ? activeChat.title : 'Study Buddy Chat'}</span>
-              </h1>
-              <p className="text-[10px] text-slate-450 dark:text-slate-500 font-medium truncate">
-                {activeChat?.notesName ? (
-                  <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400">
-                    <FileText className="h-3 w-3" />
-                    <span>Context: {activeChat.notesName}</span>
-                  </span>
-                ) : (
-                  <span>Intelligent interactive academic tutor</span>
-                )}
-              </p>
+              <div>
+                <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                  <span>{activeChat ? activeChat.title : 'Study Buddy Chat'}</span>
+                </h1>
+                <p className="text-[10px] text-slate-450 dark:text-slate-500 font-medium truncate">
+                  {activeChat?.notesName ? (
+                    <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400">
+                      <FileText className="h-3 w-3" />
+                      <span>Context: {activeChat.notesName}</span>
+                    </span>
+                  ) : (
+                    <span>Intelligent interactive academic tutor</span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -546,6 +567,7 @@ const AIChat = () => {
                   </button>
                 ))}
               </div>
+
             </div>
           )}
 
@@ -586,6 +608,7 @@ const AIChat = () => {
             />
             <button
               type="submit"
+              aria-label="Send message"
               disabled={!input.trim() || messageSending || chatDetailsLoading}
               className="absolute right-3.5 p-2 bg-brand-600 hover:bg-brand-500 disabled:bg-slate-100 dark:disabled:bg-dark-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition focus:outline-none shadow-sm"
             >

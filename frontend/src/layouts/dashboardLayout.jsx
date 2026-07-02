@@ -67,6 +67,7 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMobileOpen(true)}
+              aria-label="Open navigation sidebar"
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-400 focus:outline-none"
             >
               <Menu className="h-5 w-5" />

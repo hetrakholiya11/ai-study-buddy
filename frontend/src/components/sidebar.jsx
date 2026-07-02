@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { 
@@ -23,6 +23,17 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Detect if screen is mobile to animate X translation
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -43,14 +54,13 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
   return (
     <motion.aside
       animate={{ 
-        width: isCollapsed ? '72px' : '260px'
+        width: isCollapsed ? '72px' : '260px',
+        x: isMobile ? (mobileOpen ? 0 : -260) : 0
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={`flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 transition-colors duration-200
+      className="flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 transition-colors duration-200
         fixed md:relative z-30 top-0 bottom-0 left-0
-        max-md:w-[260px] max-md:shadow-xl
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        transition-transform duration-300 ease-in-out md:translate-x-0`}
+        max-md:w-[260px] max-md:shadow-xl md:translate-x-0"
     >
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-dark-850">
@@ -73,6 +83,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
         {/* Toggle Collapse Button (hidden on mobile) */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="absolute -right-3 top-5 bg-brand-650 hover:bg-brand-500 text-white rounded-full p-1 border border-slate-200 dark:border-dark-850 focus:outline-none transition-colors max-md:hidden"
         >
           {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
