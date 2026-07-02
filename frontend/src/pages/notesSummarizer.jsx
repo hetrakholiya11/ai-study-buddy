@@ -398,7 +398,8 @@ const NotesSummarizer = () => {
             <div
               key={summary._id}
               onClick={() => {
-                handleLoadSummary(summary._id);
+                loadSummaryDetails(summary._id);
+                if (window.innerWidth <= 768) setSidebarOpen(false);
               }}
               className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
                 isActive

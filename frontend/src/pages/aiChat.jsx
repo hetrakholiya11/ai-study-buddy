@@ -336,7 +336,10 @@ const AIChat = () => {
                   return (
                     <div
                       key={chat._id}
-                      onClick={() => handleSelectChat(chat._id)}
+                      onClick={() => {
+                        loadChatDetails(chat._id);
+                        if (window.innerWidth <= 768) setSidebarOpen(false);
+                      }}
                       className={`group relative flex items-center justify-between px-3 py-2 rounded-xl text-sm cursor-pointer transition-all border ${
                         isActive
                           ? 'bg-brand-500/10 border-brand-500/25 text-brand-650 dark:text-brand-400 font-semibold'
