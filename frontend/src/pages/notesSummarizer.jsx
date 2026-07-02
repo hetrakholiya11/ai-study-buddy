@@ -104,7 +104,8 @@ const NotesSummarizer = () => {
   const [summaries, setSummaries] = useState([]);
   const [activeSummary, setActiveSummary] = useState(null);
   const [activeSummaryId, setActiveSummaryId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [mobileView, setMobileView] = useState('summary'); // 'summary' or 'chat'
   
   // File Upload states
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -373,6 +374,14 @@ const NotesSummarizer = () => {
   return (
     <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300">
       
+      {/* Mobile Sidebar Backdrop overlay */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="md:hidden fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+        />
+      )}
+
       {/* 1. Summaries Sidebar History */}
       <AnimatePresence initial={false}>
         {sidebarOpen && (
@@ -381,7 +390,7 @@ const NotesSummarizer = () => {
             animate={{ width: 260, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="h-full bg-slate-50/50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden animate-in"
+            className="h-full bg-slate-50/50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden animate-in fixed md:relative z-30 max-md:w-[260px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
           >
             <div className="p-4 border-b border-slate-200 dark:border-dark-850">
               <button
@@ -414,7 +423,10 @@ const NotesSummarizer = () => {
                   return (
                     <div
                       key={summary._id}
-                      onClick={() => loadSummaryDetails(summary._id)}
+                      onClick={() => {
+                        loadSummaryDetails(summary._id);
+                        if (window.innerWidth <= 768) setSidebarOpen(false);
+                      }}
                       className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
                         isActive
                           ? 'bg-brand-500/10 border-brand-500/20 text-brand-650 dark:text-brand-400 font-medium'
@@ -510,8 +522,32 @@ const NotesSummarizer = () => {
             /* 3. Split Screen Workspace: Summary (Left) & Chat (Right) */
             <div className="h-full w-full flex flex-col lg:flex-row overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-dark-800">
               
+              {/* Mobile split-tab switcher */}
+              <div className="lg:hidden flex border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-950 p-2 gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setMobileView('summary')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl border transition-all ${
+                    mobileView === 'summary'
+                      ? 'bg-white dark:bg-dark-900 border-slate-200 dark:border-dark-800 text-brand-600 dark:text-brand-400 shadow-sm'
+                      : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'
+                  }`}
+                >
+                  Summary & Prep
+                </button>
+                <button
+                  onClick={() => setMobileView('chat')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl border transition-all ${
+                    mobileView === 'chat'
+                      ? 'bg-white dark:bg-dark-900 border-slate-200 dark:border-dark-800 text-brand-600 dark:text-brand-400 shadow-sm'
+                      : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'
+                  }`}
+                >
+                  Discussion Chat
+                </button>
+              </div>
+
               {/* Summary Viewer (Left Side) */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className={`flex-1 overflow-y-auto p-6 space-y-4 ${mobileView === 'summary' ? 'block' : 'hidden lg:block'}`}>
                 <div className="max-w-3xl mx-auto space-y-6">
                   
                   {/* Sub Tab Bar */}
@@ -669,7 +705,7 @@ const NotesSummarizer = () => {
               </div>
 
               {/* Inline Q&A Chat panel (Right Side) */}
-              <div className="w-full lg:w-[450px] flex flex-col h-full bg-slate-50/30 dark:bg-dark-950/20">
+              <div className={`w-full lg:w-[450px] flex flex-col h-full bg-slate-50/30 dark:bg-dark-950/20 ${mobileView === 'chat' ? 'flex' : 'hidden lg:flex'}`}>
                 
                 {/* Chat header */}
                 <div className="px-6 py-3 border-b border-slate-250 dark:border-dark-800/80 bg-slate-50/50 dark:bg-dark-900/50 flex items-center justify-between flex-shrink-0">

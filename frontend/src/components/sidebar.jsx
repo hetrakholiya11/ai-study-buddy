@@ -18,7 +18,7 @@ import ThemeToggle from './themeToggle';
 /**
  * Dashboard Sidebar supporting collapsible layout, active routing, and light/dark theme toggling.
  */
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, setMobileOpen }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -26,6 +26,10 @@ const Sidebar = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleLinkClick = () => {
+    if (setMobileOpen) setMobileOpen(false);
   };
 
   const menuItems = [
@@ -38,9 +42,15 @@ const Sidebar = () => {
 
   return (
     <motion.aside
-      animate={{ width: isCollapsed ? '72px' : '260px' }}
+      animate={{ 
+        width: isCollapsed ? '72px' : '260px'
+      }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 relative z-30 transition-colors duration-200"
+      className={`flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 relative z-30 transition-colors duration-200
+        fixed md:relative top-0 bottom-0 left-0
+        max-md:w-[260px] max-md:z-30 max-md:shadow-xl
+        ${mobileOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}
+        transition-transform duration-300 ease-in-out md:translate-x-0`}
     >
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-dark-850">
@@ -50,20 +60,20 @@ const Sidebar = () => {
             animate={{ opacity: 1 }}
             className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-lg tracking-tight"
           >
-            <BookOpen className="h-5 w-5 text-brand-600 dark:text-brand-500" />
-            <span>Study<span className="text-brand-600 dark:text-brand-500">Buddy</span></span>
+            <BookOpen className="h-5 w-5 text-brand-660 dark:text-brand-500" />
+            <span>Study<span className="text-brand-660 dark:text-brand-500">Buddy</span></span>
           </motion.div>
         )}
         {isCollapsed && (
           <div className="mx-auto">
-            <BookOpen className="h-6 w-6 text-brand-600 dark:text-brand-500" />
+            <BookOpen className="h-6 w-6 text-brand-660 dark:text-brand-500" />
           </div>
         )}
 
-        {/* Toggle Collapse Button */}
+        {/* Toggle Collapse Button (hidden on mobile) */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-5 bg-brand-650 hover:bg-brand-500 text-white rounded-full p-1 border border-slate-200 dark:border-dark-850 focus:outline-none transition-colors"
+          className="absolute -right-3 top-5 bg-brand-650 hover:bg-brand-500 text-white rounded-full p-1 border border-slate-200 dark:border-dark-850 focus:outline-none transition-colors max-md:hidden"
         >
           {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
@@ -76,6 +86,7 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             end={item.path === '/dashboard'}
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                 isActive

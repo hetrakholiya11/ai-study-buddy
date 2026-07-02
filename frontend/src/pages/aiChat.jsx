@@ -32,7 +32,7 @@ const AIChat = () => {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [activeChatId, setActiveChatId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [chatsLoading, setChatsLoading] = useState(false);
   const [chatDetailsLoading, setChatDetailsLoading] = useState(false);
   const [messageSending, setMessageSending] = useState(false);
@@ -298,8 +298,16 @@ const AIChat = () => {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300">
+    <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 transition-all duration-300 relative">
       
+      {/* Mobile Sidebar Backdrop overlay */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="md:hidden fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+        />
+      )}
+
       {/* 1. Chats Sidebar */}
       <AnimatePresence initial={false}>
         {sidebarOpen && (
@@ -308,7 +316,7 @@ const AIChat = () => {
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="h-full bg-slate-50/50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden"
+            className="h-full bg-slate-50/50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden fixed md:relative z-30 max-md:w-[280px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
           >
             {/* Sidebar Actions */}
             <div className="p-4 border-b border-slate-200 dark:border-dark-850">
@@ -351,7 +359,12 @@ const AIChat = () => {
                           return (
                             <div
                               key={chat._id}
-                              onClick={() => !isEditing && loadChatDetails(chat._id)}
+                              onClick={() => {
+                                if (!isEditing) {
+                                  loadChatDetails(chat._id);
+                                  if (window.innerWidth <= 768) setSidebarOpen(false);
+                                }
+                              }}
                               className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-all border ${
                                 isActive
                                   ? 'bg-brand-500/10 border-brand-500/20 text-brand-650 dark:text-brand-400 font-medium'
