@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/uploads', express.static('uploads'));
 // API Routing prefixes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/chats', chatRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/quiz', quizRoutes);
 

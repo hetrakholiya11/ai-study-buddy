@@ -42,16 +42,100 @@ export const aiService = {
   },
 
   /**
-   * Summarize notes from file upload or plain text.
-   * @param {File} file - PDF or text file
+   * Create a new chat session.
+   */
+  createChat: async (title, notesContext = '', notesName = '') => {
+    try {
+      const response = await API.post('/chats', { title, notesContext, notesName });
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to create chat';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Retrieve all chat sessions for active user.
+   */
+  getUserChats: async () => {
+    try {
+      const response = await API.get('/chats');
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch chats';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Retrieve a specific chat session with full history.
+   */
+  getChatById: async (chatId) => {
+    try {
+      const response = await API.get(`/chats/${chatId}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch chat details';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Send a message to an existing chat session.
+   */
+  sendMessageInChat: async (chatId, message) => {
+    try {
+      const response = await API.post(`/chats/${chatId}/message`, { message });
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to send message';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Delete a chat session.
+   */
+  deleteChat: async (chatId) => {
+    try {
+      const response = await API.delete(`/chats/${chatId}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to delete chat';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Update chat session title.
+   */
+  updateChatTitle: async (chatId, title) => {
+    try {
+      const response = await API.put(`/chats/${chatId}/title`, { title });
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to rename chat';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Summarize notes from multiple files upload or plain text.
+   * @param {Array<File>|File} files - PDF or text files
    * @param {string} textContent - Alternative text content
    * @returns {Promise<Object>} Response containing summarized text blocks
    */
-  summarizeNotes: async (file, textContent = '') => {
+  summarizeNotes: async (files, textContent = '') => {
     try {
       const formData = new FormData();
-      if (file) {
-        formData.append('file', file);
+      if (files) {
+        if (Array.isArray(files)) {
+          files.forEach((file) => {
+            formData.append('files', file);
+          });
+        } else {
+          formData.append('files', files);
+        }
       }
       if (textContent) {
         formData.append('text', textContent);
@@ -71,7 +155,7 @@ export const aiService = {
       console.warn("Backend unavailable. Simulating notes summarization offline.", error);
       await sleep(2000); // Simulate notes parsing delay
 
-      const name = file ? file.name : "text notes";
+      const name = files ? (Array.isArray(files) ? files.map(f => f.name).join(', ') : files.name) : "text notes";
       return {
         success: true,
         summary: `### Summary of: ${name}
@@ -97,13 +181,75 @@ Here is a structured, AI-generated summary of your uploaded document:
   },
 
   /**
-   * Generate an MCQ quiz.
-   * @param {Object} params - { subject, numQuestions, difficulty }
-   * @returns {Promise<Object>} Response containing array of MCQs
+   * Fetch all summaries for active user.
    */
-  generateQuiz: async ({ subject, numQuestions = 5, difficulty = 'Medium' }) => {
+  getUserSummaries: async () => {
     try {
-      const response = await API.post('/quiz/generate', { subject, numQuestions, difficulty });
+      const response = await API.get('/notes/history');
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch summaries history';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Fetch a specific summary by ID.
+   */
+  getSummaryById: async (id) => {
+    try {
+      const response = await API.get(`/notes/history/${id}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch summary details';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Delete a summary by ID.
+   */
+  deleteSummary: async (id) => {
+    try {
+      const response = await API.delete(`/notes/history/${id}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to delete summary';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Generate exam scenarios for a specific summary ID.
+   */
+  generateExamScenarios: async (id) => {
+    try {
+      const response = await API.post(`/notes/history/${id}/scenarios`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to generate exam scenario questions';
+      throw new Error(errorMsg);
+    }
+  },
+
+  generateQuiz: async ({ subject, numQuestions = 5, difficulty = 'Medium', summaryId = '', text = '', files = null }) => {
+    try {
+      let response;
+      if (files && files.length > 0) {
+        const formData = new FormData();
+        files.forEach((file) => {
+          formData.append('files', file);
+        });
+        formData.append('numQuestions', numQuestions);
+        formData.append('difficulty', difficulty);
+        response = await API.post('/quiz/generate', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        response = await API.post('/quiz/generate', { subject, numQuestions, difficulty, summaryId, text });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -180,8 +326,68 @@ Here is a structured, AI-generated summary of your uploaded document:
       const count = Math.min(numQuestions, mockQuestions.length);
       return {
         success: true,
-        questions: mockQuestions.slice(0, count)
+        quiz: {
+          _id: "mock-quiz-id-" + Date.now(),
+          title: subject ? `${subject} Quiz` : "Mock Study Quiz",
+          difficulty,
+          questions: mockQuestions.slice(0, count),
+          selectedAnswers: {},
+          score: 0,
+          completed: false
+        }
       };
+    }
+  },
+
+  /**
+   * Submit quiz evaluation answers and score.
+   */
+  submitQuiz: async (quizId, selectedAnswers, score) => {
+    try {
+      const response = await API.put(`/quiz/${quizId}/submit`, { selectedAnswers, score });
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to submit quiz results';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Fetch user attempts/history quizzes list.
+   */
+  getUserQuizzes: async () => {
+    try {
+      const response = await API.get('/quiz/history');
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch quiz history';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Fetch a single quiz details by ID.
+   */
+  getQuizById: async (quizId) => {
+    try {
+      const response = await API.get(`/quiz/${quizId}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to fetch quiz details';
+      throw new Error(errorMsg);
+    }
+  },
+
+  /**
+   * Delete a quiz attempt.
+   */
+  deleteQuiz: async (quizId) => {
+    try {
+      const response = await API.delete(`/quiz/${quizId}`);
+      return response.data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to delete quiz';
+      throw new Error(errorMsg);
     }
   }
 };

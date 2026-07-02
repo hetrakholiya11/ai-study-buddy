@@ -13,16 +13,17 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter checking extensions (only allow PDFs)
+// File filter checking extensions (allow PDFs, Word, PPTs, TXT)
 const fileFilter = (req, file, cb) => {
-  const filetypes = /pdf/;
+  const filetypes = /pdf|docx|doc|pptx|ppt|txt/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
+  const mimetypes = /pdf|plain|msword|wordprocessingml|presentationml|powerpoint/;
+  const mimetype = mimetypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb(new Error('Only PDF documents are supported for summaries!'), false);
+    cb(new Error('Only PDF, Word, PowerPoint, and TXT documents are supported for summaries!'), false);
   }
 };
 

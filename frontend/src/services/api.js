@@ -2,7 +2,9 @@ import axios from 'axios';
 
 // Base configuration for Axios instance
 const API = axios.create({
-  baseURL: 'https://ai-study-buddy-backend-gipu.onrender.com/api',
+  baseURL: typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000/api'
+    : 'https://ai-study-buddy-backend-gipu.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -25,11 +25,18 @@ class GeminiService {
    * @param {Array} history - Previous messages: [{ role: 'user'|'assistant', content: string }]
    * @returns {Promise<string>} AI assistant response text
    */
-  async chat(message, history = []) {
+  async chat(message, history = [], notesContext = '') {
     this.init();
+    
+    let systemInstruction = 'You are an AI Study Buddy, an interactive, encouraging, and intelligent tutor. Answer academic questions, write code blocks, clarify equations, and explain complex concepts in simple terms.';
+    
+    if (notesContext) {
+      systemInstruction += `\n\nAdditional Context: You have access to the user's uploaded study notes. Use the following notes text to answer the user's questions, explain terms, or provide examples if they refer to the material. If they ask general academic questions outside the notes, feel free to answer them directly as well.\n\nStudy Notes:\n${notesContext}`;
+    }
+
     const model = this.genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
-      systemInstruction: 'You are an AI Study Buddy, an interactive, encouraging, and intelligent tutor. Answer academic questions, write code blocks, clarify equations, and explain complex concepts in simple terms.'
+      systemInstruction: systemInstruction
     });
 
     // Translate client history formatting to Gemini-compatible parts array
@@ -144,6 +151,56 @@ class GeminiService {
     } catch (error) {
       console.error('Gemini Quiz JSON Parse Failure. Raw response was:', rawText);
       throw new Error('Failed to parse AI generated quiz payload.');
+    }
+  }
+
+  /**
+   * Generates a list of problem-solving/scenario exam questions from notes.
+   * Uses Gemini's structured JSON output mode.
+   * @param {string} notesText - Study notes context
+   * @returns {Promise<Array>} Array of scenario question objects
+   */
+  async generateExamScenarios(notesText) {
+    this.init();
+    
+    const model = this.genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const prompt = `
+      You are an expert exam designer. Based on the study materials provided below, write exactly 4 high-probability, conceptual, problem-solving and scenario-based questions that are very likely to be asked in university or certification exams. For each question, provide a detailed, step-by-step solution/explanation.
+      
+      The response must be a single, valid JSON object conforming exactly to this schema:
+      {
+        "scenarios": [
+          {
+            "id": 1,
+            "scenario": "A real-world or theoretical scenario/context description...",
+            "question": "What is the specific problem or exam question to be solved?",
+            "answer": "The core correct answer/formula/concept...",
+            "explanation": "Detailed step-by-step solution, calculation, or justification."
+          }
+        ]
+      }
+
+      Do not include any wrapper text, markdown blocks, or other elements. Return only the JSON object.
+      
+      Material:
+      ${notesText}
+    `;
+
+    const result = await model.generateContent(prompt);
+    const rawText = result.response.text();
+    
+    try {
+      const parsed = JSON.parse(rawText);
+      return parsed.scenarios || [];
+    } catch (error) {
+      console.error('Gemini Scenarios JSON Parse Failure. Raw response was:', rawText);
+      throw new Error('Failed to parse AI generated scenarios payload.');
     }
   }
 }
