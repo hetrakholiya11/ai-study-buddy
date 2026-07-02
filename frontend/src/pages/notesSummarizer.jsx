@@ -378,7 +378,7 @@ const NotesSummarizer = () => {
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
         />
       )}
 
@@ -390,7 +390,7 @@ const NotesSummarizer = () => {
             animate={{ width: 260, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden animate-in fixed md:relative z-30 max-md:w-[260px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
+            className="h-full bg-slate-50 dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 flex flex-col flex-shrink-0 overflow-hidden animate-in fixed md:relative z-50 max-md:w-[260px] max-md:shadow-xl max-md:left-0 top-0 bottom-0"
           >
             <div className="p-4 border-b border-slate-200 dark:border-dark-850">
               <button

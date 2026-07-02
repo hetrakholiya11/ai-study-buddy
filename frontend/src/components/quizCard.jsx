@@ -57,15 +57,15 @@ const QuizCard = ({
               key={index}
               disabled={showResult}
               onClick={() => onSelectOption(index)}
-              className={`flex items-center justify-between gap-4 p-4 rounded-xl border text-left font-medium text-sm transition-all focus:outline-none ${btnClass}`}
+              className={`flex items-start justify-between gap-4 p-4 rounded-xl border text-left font-medium text-sm transition-all focus:outline-none ${btnClass}`}
             >
-              <div className="flex items-center gap-3">
-                <span className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <span className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400 flex-shrink-0 mt-0.5">
                   {String.fromCharCode(65 + index)}
                 </span>
-                <span>{option}</span>
+                <span className="break-words flex-1 min-w-0 leading-relaxed">{option}</span>
               </div>
-              {statusIcon}
+              {statusIcon && <div className="flex-shrink-0 mt-0.5">{statusIcon}</div>}
             </button>
           );
         })}

@@ -322,7 +322,7 @@ const QuizGenerator = () => {
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
         />
       )}
 
@@ -330,7 +330,7 @@ const QuizGenerator = () => {
       <div
         className={`h-full border-r border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-950 flex flex-col flex-shrink-0 transition-all duration-300 ${
           sidebarOpen ? 'w-[290px]' : 'w-0'
-        } overflow-hidden fixed md:relative z-30 max-md:w-[290px] max-md:shadow-xl max-md:left-0 top-0 bottom-0`}
+        } overflow-hidden fixed md:relative z-50 max-md:w-[290px] max-md:shadow-xl max-md:left-0 top-0 bottom-0`}
       >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-slate-200 dark:border-dark-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-dark-900">
