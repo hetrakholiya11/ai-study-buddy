@@ -46,10 +46,10 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
         width: isCollapsed ? '72px' : '260px'
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={`flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 relative z-30 transition-colors duration-200
-        fixed md:relative top-0 bottom-0 left-0
-        max-md:w-[260px] max-md:z-30 max-md:shadow-xl
-        ${mobileOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}
+      className={`flex flex-col h-screen bg-white dark:bg-dark-900 border-r border-slate-200 dark:border-dark-800 text-slate-700 dark:text-slate-300 transition-colors duration-200
+        fixed md:relative z-30 top-0 bottom-0 left-0
+        max-md:w-[260px] max-md:shadow-xl
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         transition-transform duration-300 ease-in-out md:translate-x-0`}
     >
       {/* Brand Header */}
