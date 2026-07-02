@@ -328,7 +328,7 @@ const QuizGenerator = () => {
 
       {/* 1. History Sidebar (Collapsible) */}
       <div
-        className={`h-full border-r border-slate-200 dark:border-dark-800 bg-slate-50/50 dark:bg-dark-950 flex flex-col flex-shrink-0 transition-all duration-300 ${
+        className={`h-full border-r border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-950 flex flex-col flex-shrink-0 transition-all duration-300 ${
           sidebarOpen ? 'w-[290px]' : 'w-0'
         } overflow-hidden fixed md:relative z-30 max-md:w-[290px] max-md:shadow-xl max-md:left-0 top-0 bottom-0`}
       >
