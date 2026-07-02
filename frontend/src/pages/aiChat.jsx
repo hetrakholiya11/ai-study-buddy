@@ -351,11 +351,11 @@ const AIChat = () => {
                         {isEditing ? (
                           <input
                             type="text"
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveRenameChat(chat._id);
+                              if (e.key === 'Enter') saveRenameChat(e, chat._id);
                               if (e.key === 'Escape') setEditingChatId(null);
                             }}
                             className="w-full text-xs bg-slate-50 dark:bg-dark-950 border border-slate-350 dark:border-dark-800 px-2 py-0.5 rounded focus:outline-none"
@@ -379,7 +379,7 @@ const AIChat = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                saveRenameChat(chat._id);
+                                saveRenameChat(e, chat._id);
                               }}
                               aria-label="Confirm rename"
                               className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
