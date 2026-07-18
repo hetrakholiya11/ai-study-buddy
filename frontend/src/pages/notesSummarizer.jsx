@@ -19,7 +19,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ArrowLeft,
-  X
+  X,
+  Share2,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -344,6 +346,21 @@ const NotesSummarizer = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleShare = () => {
+    if (!activeSummaryId) return;
+    const shareUrl = `${window.location.origin}/share/notes/${activeSummaryId}`;
+    navigator.clipboard.writeText(shareUrl);
+    showToast('Shareable public link copied to clipboard!', 'success');
+  };
+
+  const handleDownloadPDF = () => {
+    if (!activeSummaryId) return;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isLocal ? 'http://localhost:5000' : 'https://ai-study-buddy-backend-gipu.onrender.com';
+    const downloadUrl = `${baseUrl}/api/notes/public/${activeSummaryId}/pdf`;
+    window.open(downloadUrl, '_blank');
+  };
+
   // Start new summary upload
   const handleNewSummary = () => {
     setActiveSummary(null);
@@ -498,6 +515,20 @@ const NotesSummarizer = () => {
 
           {activeSummary && (
             <div className="flex gap-2">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-3 py-2 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-800 rounded-lg transition"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span>Share</span>
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-3 py-2 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-800 rounded-lg transition"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Download PDF</span>
+              </button>
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 text-xs font-semibold text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-3 py-2 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-800 rounded-lg transition"

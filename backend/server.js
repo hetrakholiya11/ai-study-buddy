@@ -10,6 +10,7 @@ import aiRoutes from './routes/aiRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import roadmapRoutes from './routes/roadmapRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/quiz', quizRoutes);
+app.use('/api/roadmaps', roadmapRoutes);
 
 // Base health check endpoint
 app.get('/health', (req, res) => {

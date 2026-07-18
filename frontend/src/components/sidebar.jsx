@@ -10,7 +10,8 @@ import {
   LogOut, 
   ChevronLeft, 
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Map
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ThemeToggle from './themeToggle';
@@ -48,6 +49,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
     { path: '/dashboard/chat', label: 'AI Chat Buddy', icon: <MessageSquareCode className="h-5 w-5" /> },
     { path: '/dashboard/summarizer', label: 'Notes Summarizer', icon: <FileText className="h-5 w-5" /> },
     { path: '/dashboard/quiz', label: 'Quiz Generator', icon: <HelpCircle className="h-5 w-5" /> },
+    { path: '/dashboard/roadmaps', label: 'Study Roadmap', icon: <Map className="h-5 w-5" /> },
     { path: '/dashboard/profile', label: 'My Profile', icon: <User className="h-5 w-5" /> },
   ];
 

@@ -4,12 +4,18 @@ import {
   getUserSummaries, 
   getSummaryById, 
   deleteSummary,
-  generateScenariosForSummary
+  generateScenariosForSummary,
+  getPublicSummaryById,
+  downloadPublicSummaryPDF
 } from '../controllers/aiController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
+
+// Public Route (does not require login)
+router.get('/public/:id', getPublicSummaryById);
+router.get('/public/:id/pdf', downloadPublicSummaryPDF);
 
 // Protected Notes Summarizer history routes
 router.get('/history', protect, getUserSummaries);

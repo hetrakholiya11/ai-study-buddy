@@ -6,6 +6,7 @@ import Chat from '../models/Chat.js';
 import Summary from '../models/Summary.js';
 import Quiz from '../models/Quiz.js';
 import { parseOffice } from 'officeparser';
+import { generateSummaryPDF } from '../utils/pdfGenerator.js';
 
 /**
  * @desc    Chat with AI Study Buddy
@@ -492,3 +493,55 @@ export const generateScenariosForSummary = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * @desc    Get a public summary details by ID (unauthenticated)
+ * @route   GET /api/notes/public/:id
+ * @access  Public
+ */
+export const getPublicSummaryById = async (req, res) => {
+  try {
+    const summary = await Summary.findById(req.params.id)
+      .select('title summaryText scenarios createdAt');
+    
+    if (!summary) {
+      return res.status(404).json({ success: false, error: 'Summary not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      summary
+    });
+  } catch (error) {
+    console.error('Get Public Summary By ID Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * @desc    Download public summary PDF file
+ * @route   GET /api/notes/public/:id/pdf
+ * @access  Public
+ */
+export const downloadPublicSummaryPDF = async (req, res) => {
+  try {
+    const summary = await Summary.findById(req.params.id);
+    if (!summary) {
+      return res.status(404).json({ success: false, error: 'Summary not found' });
+    }
+
+    // Safe filename conversion
+    const safeTitle = summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const filename = `${safeTitle || 'notes'}_summary.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Stream PDF directly to client response
+    generateSummaryPDF(summary, res);
+  } catch (error) {
+    console.error('Download Public Summary PDF Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+

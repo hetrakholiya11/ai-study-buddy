@@ -389,5 +389,52 @@ Here is a structured, AI-generated summary of your uploaded document:
       const errorMsg = error.response?.data?.error || 'Failed to delete quiz';
       throw new Error(errorMsg);
     }
+  },
+
+  /**
+   * Fetch a public unauthenticated note summary by ID.
+   */
+  getPublicSummaryById: async (id) => {
+    try {
+      const response = await API.get(`/notes/public/${id}`);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        const errorMsg = error.response.data?.error || 'Failed to load shared summary';
+        throw new Error(errorMsg);
+      }
+      console.warn("Backend unavailable. Loading demo public shared summary.");
+      await sleep(1000);
+      return {
+        success: true,
+        summary: {
+          _id: id,
+          title: "Demo Notes Summary: Computer Science 101",
+          summaryText: `### Summary of: CS101 Lecture Slides
+          
+This lecture introduces the basics of computer architectures, programming concepts, and database systems.
+
+#### Core Objectives
+* Comprehend the Von Neumann architecture concept.
+* Understand primitive data types and structures.
+* Construct query patterns for Relational Databases.
+
+#### Key Takeaways
+* **CPU**: Central processing unit that executes instructions.
+* **RAM**: Random access memory providing high-speed volatile data structures.
+* **SQL**: Structured query language for talking to relational databases.`,
+          scenarios: [
+            {
+              id: 1,
+              scenario: "A server experiences slow performance when retrieving list items from a database without indexing keys.",
+              question: "How would you optimize this query performance using database schemas?",
+              answer: "Create an index on the foreign key or fields used in query filters.",
+              explanation: "Database indexes allow the query planner to retrieve records directly without executing a full table scan, speeding up reads."
+            }
+          ],
+          createdAt: new Date().toISOString()
+        }
+      };
+    }
   }
 };

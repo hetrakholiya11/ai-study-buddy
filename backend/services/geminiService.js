@@ -203,6 +203,65 @@ class GeminiService {
       throw new Error('Failed to parse AI generated scenarios payload.');
     }
   }
+
+  /**
+   * Deconstructs syllabus into structured study roadmap format using Gemini's JSON mode.
+   * @param {string} syllabusText - Syllabus source content
+   * @param {string} timeframe - Intended duration (e.g. 4 Weeks, 8 Weeks, Self-Paced)
+   * @returns {Promise<Object>} Deconstructed roadmap structure
+   */
+  async deconstructSyllabus(syllabusText, timeframe) {
+    this.init();
+
+    const model = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const prompt = `
+      You are an expert curriculum designer and academic study advisor. Your goal is to analyze the syllabus or course material text provided below and deconstruct it into a highly structured, organized, and chronologically ordered study roadmap designed for a student.
+      
+      The student wants to complete this roadmap in: "${timeframe}".
+      Ensure the modules fit this timeframe appropriately. If the timeframe is a number of weeks (e.g. 4 Weeks), partition the modules to map to those weeks (e.g., Week 1, Week 2, etc.).
+
+      The response must be a single, valid JSON object conforming exactly to this schema:
+      {
+        "title": "Clear, concise title of the course/syllabus (e.g. Introduction to Physics)",
+        "modules": [
+          {
+            "id": 1, // Integer starting from 1
+            "title": "Module Title (e.g. Fundamentals of Kinematics or Week 1: Basics)",
+            "description": "A concise overview of what is covered in this study module.",
+            "duration": "Estimated effort or target timeframe (e.g., Week 1 or 4 hours)",
+            "tasks": [
+              {
+                "id": 1, // Integer starting from 1 for this module
+                "name": "Specific actionable study task (e.g. Read Chapter 1: Vectors, Complete practice problems 1.1-1.5, Watch lecture on motion in 1D)"
+              }
+            ]
+          }
+        ]
+      }
+
+      Ensure tasks are specific, highly actionable, and tailored to students (e.g. "Review formulas for acceleration", "Solve exercise set A"). Offer between 3 to 6 tasks per module.
+      Do not include any wrapper text, markdown formatting, or HTML tags. Return ONLY the JSON object.
+
+      Syllabus Content:
+      ${syllabusText}
+    `;
+
+    const result = await model.generateContent(prompt);
+    const rawText = result.response.text();
+
+    try {
+      return JSON.parse(rawText);
+    } catch (error) {
+      console.error('Gemini Syllabus JSON Parse Failure. Raw response was:', rawText);
+      throw new Error('Failed to parse AI generated syllabus roadmap.');
+    }
+  }
 }
 
 export default new GeminiService();

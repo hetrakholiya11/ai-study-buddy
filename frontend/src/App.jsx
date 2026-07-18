@@ -10,6 +10,7 @@ import About from './pages/about';
 import Contact from './pages/contact';
 import Login from './pages/login';
 import Register from './pages/register';
+import PublicSummary from './pages/publicSummary';
 
 // Import protected pages
 import Dashboard from './pages/dashboard';
@@ -17,6 +18,8 @@ import AIChat from './pages/aiChat';
 import NotesSummarizer from './pages/notesSummarizer';
 import QuizGenerator from './pages/quizGenerator';
 import Profile from './pages/profile';
+import Roadmaps from './pages/roadmaps';
+import RoadmapDetail from './pages/roadmapDetail';
 
 // CSS imports
 import './App.css';
@@ -35,6 +38,7 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="share/notes/:id" element={<PublicSummary />} />
       </Route>
 
       {/* Protected Dashboard Pages Layout */}
@@ -51,6 +55,8 @@ function App() {
         <Route path="summarizer" element={<NotesSummarizer />} />
         <Route path="quiz" element={<QuizGenerator />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="roadmaps" element={<Roadmaps />} />
+        <Route path="roadmaps/:id" element={<RoadmapDetail />} />
       </Route>
 
       {/* Fallback Catch-All */}
